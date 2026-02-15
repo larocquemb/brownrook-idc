@@ -1,0 +1,7 @@
+.DS_Store
+# Never commit key material
+*.key
+*.p12
+*.pfx
+*.pem.key
+
