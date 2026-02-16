@@ -1,0 +1,31 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "FastAPI (uvicorn)",
+      "type": "debugpy",
+      "redirectOutput": true,    
+      "request": "launch",
+      "module": "uvicorn",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "app.main:app",
+        "--host", "127.0.0.1",
+        "--port", "8080"
+      ],
+      "envFile": "${workspaceFolder}/.env",
+      "console": "integratedTerminal",
+      "logToFile": true,
+      "jinja": true,
+      "subProcess": true,      
+      "justMyCode": true
+    },
+    {
+      "name": "Attach (debugpy)",
+      "type": "debugpy",
+      "request": "attach",
+      "connect": { "host": "127.0.0.1", "port": 5678 },
+      "justMyCode": false
+    }
+  ]
+}

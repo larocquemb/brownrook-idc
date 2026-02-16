@@ -1,0 +1,105 @@
+I+00000.007: macOS-26.2-arm64-arm-64bit-Mach-O arm64
+             CPython 3.13.12 (64-bit)
+             debugpy 1.8.20
+
+I+00000.016: Initial environment:
+             
+             System paths:
+                 sys.executable: /Users/paul/Developer/brownrook/brownrook-idc/.ven313/bin/python3.13(/opt/homebrew/Cellar/python@3.13/3.13.12_1/Frameworks/Python.framework/Versions/3.13/bin/python3.13)
+                 sys.prefix: /Users/paul/Developer/brownrook/brownrook-idc/.ven313
+                 sys.base_prefix: /opt/homebrew/opt/python@3.13/Frameworks/Python.framework/Versions/3.13(/opt/homebrew/Cellar/python@3.13/3.13.12_1/Frameworks/Python.framework/Versions/3.13)
+                 sys.real_prefix: <missing>
+                 site.getsitepackages(): /Users/paul/Developer/brownrook/brownrook-idc/.ven313/lib/python3.13/site-packages
+                 site.getusersitepackages(): /Users/paul/Library/Python/3.13/lib/python/site-packages
+                 sys.path (site-packages): /Users/paul/Developer/brownrook/brownrook-idc/.ven313/lib/python3.13/site-packages
+                 sysconfig.get_path('stdlib'): /opt/homebrew/opt/python@3.13/Frameworks/Python.framework/Versions/3.13/lib/python3.13(/opt/homebrew/Cellar/python@3.13/3.13.12_1/Frameworks/Python.framework/Versions/3.13/lib/python3.13)
+                 sysconfig.get_path('platstdlib'): /Users/paul/Developer/brownrook/brownrook-idc/.ven313/lib/python3.13
+                 sysconfig.get_path('purelib'): /Users/paul/Developer/brownrook/brownrook-idc/.ven313/lib/python3.13/site-packages
+                 sysconfig.get_path('platlib'): /Users/paul/Developer/brownrook/brownrook-idc/.ven313/lib/python3.13/site-packages
+                 sysconfig.get_path('include'): /opt/homebrew/opt/python@3.13/Frameworks/Python.framework/Versions/3.13/include/python3.13(/opt/homebrew/Cellar/python@3.13/3.13.12_1/Frameworks/Python.framework/Versions/3.13/include/python3.13)
+                 sysconfig.get_path('scripts'): /Users/paul/Developer/brownrook/brownrook-idc/.ven313/bin
+                 sysconfig.get_path('data'): /Users/paul/Developer/brownrook/brownrook-idc/.ven313
+                 os.__file__: /opt/homebrew/Cellar/python@3.13/3.13.12_1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/os.py
+                 threading.__file__: /opt/homebrew/Cellar/python@3.13/3.13.12_1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/threading.py
+                 debugpy.__file__: /Users/paul/Developer/brownrook/brownrook-idc/.ven313/lib/python3.13/site-packages/debugpy/__init__.py
+             
+             Installed packages:
+                 anyio==4.12.1
+                 click==8.3.1
+                 fastapi==0.115.6
+                 certifi==2026.1.4
+                 uvicorn==0.34.0
+                 websockets==16.0
+                 pydantic==2.12.5
+                 requests==2.32.3
+                 cachetools==5.5.1
+                 idna==3.11
+                 debugpy==1.8.20
+                 cffi==2.0.0
+                 ecdsa==0.19.1
+                 charset-normalizer==3.4.4
+                 python-dotenv==1.0.1
+                 watchfiles==1.1.1
+                 python-jose==3.3.0
+                 h11==0.16.0
+                 pycparser==3.0
+                 rsa==4.9.1
+                 httptools==0.7.1
+                 PyYAML==6.0.3
+                 pydantic_core==2.41.5
+                 urllib3==2.6.3
+                 typing_extensions==4.15.0
+                 pyasn1==0.6.2
+                 pip==26.0.1
+                 starlette==0.41.3
+                 uvloop==0.22.1
+                 typing-inspection==0.4.2
+                 annotated-types==0.7.0
+                 cryptography==46.0.5
+                 six==1.17.0
+
+D+00000.016: listen(('127.0.0.1', 5678), **{})
+
+I+00000.016: Initial debug configuration: {
+                 "qt": "none",
+                 "subProcess": true,
+                 "python": "/Users/paul/Developer/brownrook/brownrook-idc/.ven313/bin/python3.13",
+                 "pythonEnv": {}
+             }
+
+I+00000.016: Waiting for adapter endpoints on 127.0.0.1:62914...
+
+I+00000.016: debugpy.listen() spawning adapter: [
+                 "/Users/paul/Developer/brownrook/brownrook-idc/.ven313/bin/python3.13",
+                 "/Users/paul/Developer/brownrook/brownrook-idc/.ven313/lib/python3.13/site-packages/debugpy/adapter",
+                 "--for-server",
+                 "62914",
+                 "--host",
+                 "127.0.0.1",
+                 "--port",
+                 "5678",
+                 "--server-access-token",
+                 "5f262a52c86f53f8c5426ccea92442c7be22b47dbe7c5b16b8f2241429ab6e2e",
+                 "--log-dir",
+                 "/Users/paul/Developer/brownrook/brownrook-idc/.debugpy"
+             ]
+
+I+00000.073: Endpoints received from adapter: {
+                 "client": {
+                     "host": "127.0.0.1",
+                     "port": 5678
+                 },
+                 "server": {
+                     "host": "127.0.0.1",
+                     "port": 62917
+                 }
+             }
+
+I+00000.073: Adapter is accepting incoming client connections on 127.0.0.1:5678
+
+D+00000.073: pydevd.settrace(*(), **{'host': '127.0.0.1', 'port': 62917, 'wait_for_ready_to_run': False, 'block_until_connected': True, 'access_token': '5f262a52c86f53f8c5426ccea92442c7be22b47dbe7c5b16b8f2241429ab6e2e', 'suspend': False, 'patch_multiprocessing': True, 'dont_trace_start_patterns': ('/Users/paul/Developer/brownrook/brownrook-idc/.ven313/lib/python3.13/site-packages/debugpy',), 'dont_trace_end_patterns': ('debugpy_launcher.py',)})
+
+I+00000.185: pydevd is connected to adapter at 127.0.0.1:62917
+
+D+00000.185: wait_for_client()
+
