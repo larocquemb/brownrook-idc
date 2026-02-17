@@ -21,6 +21,7 @@
       "logToFile": true,
       "jinja": true,
       "subProcess": true,      
+      "stopOnEntry": true,
       "justMyCode": true
     },
     {

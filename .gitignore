@@ -5,3 +5,9 @@
 *.pfx
 *.pem.key
 
+# Python bytecode/cache
+__pycache__/
+*.pyc
+
+# debugpy logs
+.debugpy/

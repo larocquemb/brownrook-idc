@@ -22,24 +22,6 @@ if _debugpy_log_dir:
         # Don't let logging setup break app startup.
         pass
 
-def _debug_wait_on_startup() -> None:
-    if os.getenv("DEBUGPY_WAIT") != "1":
-        return
-    import debugpy
-    import logging
-
-    if not debugpy.is_client_connected():
-        try:
-            debugpy.listen(("127.0.0.1", 5678))
-        except RuntimeError:
-            # Already listening/connected via launcher.
-            pass
-        logging.getLogger("uvicorn.error").warning(
-            "DEBUGPY_WAIT=1; waiting for debugger attach..."
-        )
-        debugpy.wait_for_client()
-    debugpy.breakpoint()
-
 # ===== ConfiÙg (env-driven) =====
 OIDC_ISSUER = os.getenv("OIDC_ISSUER", "").rstrip("/")
 OIDC_AUDIENCE = os.getenv("OIDC_AUDIENCE", "")
@@ -122,12 +104,6 @@ def _verify_token(token: str) -> Dict[str, Any]:
 @app.get("/health")
 def health():
     return {"status": "ok", "oidc_configured": CONFIG_OK}
-
-
-@app.on_event("startup")
-async def _debugpy_startup() -> None:
-    # DEBUG STARTUP: should pause here when DEBUGPY_WAIT=1
-    _debug_wait_on_startup()
 
 
 @app.get("/secure")
