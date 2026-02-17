@@ -126,6 +126,7 @@ def health():
 
 @app.on_event("startup")
 async def _debugpy_startup() -> None:
+    # DEBUG STARTUP: should pause here when DEBUGPY_WAIT=1
     _debug_wait_on_startup()
 
 
@@ -138,4 +139,4 @@ def secure(credentials: HTTPAuthorizationCredentials = Depends(security)):
 
 @app.on_event("startup")
 async def startup():
-    x = 1  # breakpoint here to verify debugger is working
+    pass
