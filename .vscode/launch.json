@@ -2,34 +2,22 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "FastAPI (uvicorn)",
-      "type": "python",
-      "redirectOutput": true,    
-      "request": "launch",
-      "module": "uvicorn",
-      "cwd": "${workspaceFolder}",
-      "args": [
-        "app.main:app",
-        "--host", "127.0.0.1",
-        "--port", "8080"
-      ],
-      "envFile": "${workspaceFolder}/.env",
-      "env": {
-        "DEBUGPY_WAIT": "1"
-      },
-      "console": "integratedTerminal",
-      "logToFile": true,
-      "jinja": true,
-      "subProcess": true,      
-      "stopOnEntry": true,
-      "justMyCode": true
-    },
-    {
       "name": "Attach (debugpy)",
       "type": "python",
       "request": "attach",
+      "python": "${workspaceFolder}/.venv/bin/python",
+      "envFile": "${workspaceFolder}/.env",
       "connect": { "host": "127.0.0.1", "port": 5678 },
       "justMyCode": false
+    },
+    {
+      "name": "Uvicorn (manual start)",
+      "type": "python",
+      "request": "attach",
+      "python": "${workspaceFolder}/.venv/bin/python",
+      "envFile": "${workspaceFolder}/.env",
+      "connect": { "host": "127.0.0.1", "port": 5678 },
+      "justMyCode": true
     }
   ]
 }

@@ -1,11 +1,23 @@
+# Azure CLI login + token (for local testing with Conditional Access):
+#    az login --allow-no-subscriptions
+#   az account get-access-token \
+#     --resource api://6d299c31-0dbe-4484-a18f-220d13558f3d \
+#     --query accessToken -o tsv
+#   export TOKEN="$(az account get-access-token \
+#     --resource api://6d299c31-0dbe-4484-a18f-220d13558f3d \
+#     --query accessToken -o tsv)"
+#   curl -i -H "Authorization: Bearer $TOKEN" http://localhost:8080/secure
+
 import os
-from dotenv import load_dotenv
+import time
 from typing import Any, Dict
+
 import requests
 from cachetools import TTLCache
+from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import jwt, JWTError
+from jose import JWTError, jwt
 
 load_dotenv()
 app = FastAPI(title="BrownRook IDC", version="0.2.0")
@@ -22,13 +34,13 @@ if _debugpy_log_dir:
         # Don't let logging setup break app startup.
         pass
 
-# ===== ConfiÙg (env-driven) =====
+# ===== Config (env-driven) =====
 OIDC_ISSUER = os.getenv("OIDC_ISSUER", "").rstrip("/")
 OIDC_AUDIENCE = os.getenv("OIDC_AUDIENCE", "")
 OIDC_JWKS_URL = os.getenv("OIDC_JWKS_URL", "")
 
 if not (OIDC_ISSUER and OIDC_AUDIENCE and OIDC_JWKS_URL):
-    # Don’t crash import-time; fail securely on /secure with clear message.
+    # Don't crash import-time; fail securely on /secure with clear message.
     CONFIG_OK = False
 else:
     CONFIG_OK = True
@@ -81,7 +93,7 @@ def _verify_token(token: str) -> Dict[str, Any]:
             audience=OIDC_AUDIENCE,
             options={
                 "verify_aud": True,
-                "verify_iss": False,   # we verify manually (normalize /)
+                "verify_iss": False,  # we verify manually (normalize /)
                 "verify_exp": True,
             },
         )
@@ -93,7 +105,8 @@ def _verify_token(token: str) -> Dict[str, Any]:
             raise HTTPException(status_code=401, detail="Issuer mismatch")
         return claims
 
-    except HTTPException:
+    except HTTPException as exc:
+        print(f"Auth error: {exc.detail}")
         raise
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
@@ -110,7 +123,12 @@ def health():
 def secure(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     claims = _verify_token(token)
-    return {"claims": claims}
+    now = int(time.time())
+    exp = int(claims.get("exp", 0))
+    expires_in = max(0, exp - now) if exp else None
+    if expires_in is not None:
+        print(f"Token expires in {expires_in} seconds")
+    return {"claims": claims, "expires_in_seconds": expires_in}
 
 
 @app.on_event("startup")
