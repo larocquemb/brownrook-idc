@@ -19,7 +19,9 @@ from cachetools import TTLCache
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Response, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import JWTError, jwt
+import jwt
+from jwt import PyJWKClient
+from jwt import InvalidTokenError
 
 load_dotenv()
 app = FastAPI(title="BrownRook IDC", version="0.2.0")
@@ -36,11 +38,16 @@ if _debugpy_log_dir:
         # Don't let logging setup break app startup.
         pass
 
+if os.getenv("DEBUGPY") == "1":
+    import debugpy
+    debugpy.listen(("127.0.0.1", 5678))
+    print("✅ debugpy listening on 127.0.0.1:5678")
+    # DON'T call wait_for_client() unless you want it to pause here
+
 # Optional: wait for debugger to attach before serving requests.
 if os.getenv("DEBUGPY_WAIT") == "1":
     try:
         import debugpy
-
         debugpy.listen(("127.0.0.1", 5678))
         debugpy.wait_for_client()
     except Exception:
@@ -60,75 +67,51 @@ else:
     CONFIG_OK = True
 
 # Cache JWKS for 10 minutes to reduce latency and avoid rate limits
+ALLOWED_ALGS = ["RS256"]
 _jwks_cache: TTLCache = TTLCache(maxsize=2, ttl=600)
+_jwk_client = PyJWKClient(OIDC_JWKS_URL)
 
 
-def _get_jwks() -> Dict[str, Any]:
-    cached = _jwks_cache.get("jwks")
-    if cached:
-        return cached
-
-    r = requests.get(OIDC_JWKS_URL, timeout=5)
-    r.raise_for_status()
-    jwks = r.json()
-    _jwks_cache["jwks"] = jwks
-    return jwks
-
-
-def _verify_token(token: str) -> Dict[str, Any]:
+def _verify_token(token: str) -> dict:
     if not CONFIG_OK:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="OIDC not configured (set OIDC_ISSUER, OIDC_AUDIENCE, OIDC_JWKS_URL)",
+            status_code=500,
+            detail="OIDC not configured"
         )
 
     try:
-        header = jwt.get_unverified_header(token)
-        kid = header.get("kid")
-        if not kid:
-            raise HTTPException(status_code=401, detail="Missing kid in token header")
-
-        jwks = _get_jwks()
-        keys = jwks.get("keys", [])
-        key = next((k for k in keys if k.get("kid") == kid), None)
-        if not key:
-            # Key rotation case: refresh once
-            _jwks_cache.pop("jwks", None)
-            jwks = _get_jwks()
-            keys = jwks.get("keys", [])
-            key = next((k for k in keys if k.get("kid") == kid), None)
-            if not key:
-                raise HTTPException(status_code=401, detail="Unknown kid (no matching JWKS key)")
+        # Automatically fetches & selects correct key by kid
+        signing_key = _jwk_client.get_signing_key_from_jwt(token)
 
         claims = jwt.decode(
             token,
-            key,
-            algorithms=[header.get("alg", "RS256")],
+            signing_key.key,
+            algorithms=ALLOWED_ALGS,
             audience=OIDC_AUDIENCE,
+            issuer=OIDC_ISSUER,
             options={
-                "verify_aud": True,
-                "verify_iss": False,  # we verify manually (normalize /)
+                "require": ["exp", "iss", "aud"],
+                "verify_signature": True,
                 "verify_exp": True,
+                "verify_aud": True,
+                "verify_iss": True,
             },
         )
 
-        # Manual issuer check (handles trailing slash differences)
-        token_iss = (claims.get("iss") or "").rstrip("/")
-        expected_iss = OIDC_ISSUER.rstrip("/")
-        if token_iss != expected_iss:
-            raise HTTPException(status_code=401, detail="Issuer mismatch")
         return claims
 
-    except HTTPException as exc:
-        print(f"Auth error: {exc.detail}")
-        raise
-    except JWTError:
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+
+    except jwt.InvalidAudienceError:
+        raise HTTPException(status_code=401, detail="Invalid audience")
+
+    except jwt.InvalidIssuerError:
+        raise HTTPException(status_code=401, detail="Invalid issuer")
+
+    except InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
-    except requests.RequestException as exc:
-        print(f"JWKS fetch failed: {exc}")
-        raise HTTPException(status_code=503, detail="JWKS fetch failed")
-
-
+    
 @app.get("/health")
 def health():
     return {"status": "ok", "oidc_configured": CONFIG_OK}
