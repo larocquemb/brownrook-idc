@@ -24,7 +24,7 @@ from typing import Any, Dict
 import requests
 from cachetools import TTLCache
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, HTTPException, Response, status
+from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 import jwt
 from jwt import PyJWKClient
@@ -80,14 +80,17 @@ ALLOWED_ALGS = ["RS256"]
 _jwks_cache: TTLCache = TTLCache(maxsize=2, ttl=600)
 _jwk_client = PyJWKClient(OIDC_JWKS_URL)
 
-def _unauthorized(detail: str) -> HTTPException:
+def _unauthorized(detail: str, request_id: str | None = None) -> HTTPException:
+    headers = {"WWW-Authenticate": "Bearer"}
+    if request_id:
+        headers["X-Request-ID"] = request_id
     return HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail=detail,
-        headers={"WWW-Authenticate": "Bearer"},
+        headers=headers,
     )
 
-def _verify_token(token: str) -> dict:
+def _verify_token(token: str, request_id: str | None = None) -> dict:
     if not CONFIG_OK:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -134,33 +137,33 @@ def _verify_token(token: str) -> dict:
 
     # ---- Token validation errors → 401 ----
     except jwt.ExpiredSignatureError:
-        logger.info("Token expired")
-        raise _unauthorized("Token expired")
+        logger.info("Token expired (request_id=%s)", request_id)
+        raise _unauthorized("Token expired", request_id)
 
     except jwt.InvalidIssuerError:
-        logger.info("Invalid issuer")
-        raise _unauthorized("Invalid issuer")
+        logger.info("Invalid issuer (request_id=%s)", request_id)
+        raise _unauthorized("Invalid issuer", request_id)
 
     except jwt.InvalidAudienceError:
-        logger.info("Invalid audience")
-        raise _unauthorized("Invalid audience")
+        logger.info("Invalid audience (request_id=%s)", request_id)
+        raise _unauthorized("Invalid audience", request_id)
 
     except jwt.ImmatureSignatureError:
-        logger.info("Token not yet valid")
-        raise _unauthorized("Token not yet valid")
+        logger.info("Token not yet valid (request_id=%s)", request_id)
+        raise _unauthorized("Token not yet valid", request_id)
 
     except jwt.InvalidSignatureError:
-        logger.info("Invalid signature")
-        raise _unauthorized("Invalid token signature")
+        logger.info("Invalid signature (request_id=%s)", request_id)
+        raise _unauthorized("Invalid token signature", request_id)
 
     except InvalidTokenError as e:
-        logger.info("Invalid token: %s", e)
-        raise _unauthorized("Invalid token")
+        logger.info("Invalid token (request_id=%s): %s", request_id, e)
+        raise _unauthorized("Invalid token", request_id)
 
     except Exception as e:
         # Catch absolutely everything else to prevent 500 auth leaks
-        logger.exception("Unexpected auth error")
-        raise _unauthorized("Authentication failed")
+        logger.exception("Unexpected auth error (request_id=%s)", request_id)
+        raise _unauthorized("Authentication failed", request_id)
 
 @app.get("/health")
 def health():
@@ -168,9 +171,10 @@ def health():
 
 
 @app.get("/secure")
-def secure(credentials: HTTPAuthorizationCredentials = Depends(security)):
+def secure(request: Request, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    request_id = request.headers.get("X-Request-ID")
     token = credentials.credentials
-    claims = _verify_token(token)
+    claims = _verify_token(token, request_id)
     print("Token claims:\n" + pformat(claims, sort_dicts=True))
     now = int(time.time())
     exp = int(claims.get("exp", 0))
