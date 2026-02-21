@@ -1,19 +1,19 @@
 # Azure CLI login + token (for local testing with Conditional Access):
 #    az login --allow-no-subscriptions
 #   az account get-access-token \
-#     --resource api://6d299c31-0dbe-4484-a18f-220d13558f3d \
+#     --scope api://6d299c31-0dbe-4484-a18f-220d13558f3d/.default \
 #     --query accessToken -o tsv
 #   export TOKEN="$(az account get-access-token \
-#     --resource api://6d299c31-0dbe-4484-a18f-220d13558f3d \
+#     --scope api://6d299c31-0dbe-4484-a18f-220d13558f3d/.default \
 #     --query accessToken -o tsv)"
 #   curl -i -H "Authorization: Bearer $TOKEN" http://localhost:8080/secure
+#   DEBUGPY=1 python -m uvicorn app.main:app --host 127.0.0.1 --port 8080
 
 import json
 import os
 import time
 from pprint import pformat
 from typing import Any, Dict
-
 import requests
 from cachetools import TTLCache
 from dotenv import load_dotenv
