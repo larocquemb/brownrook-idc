@@ -8,6 +8,12 @@
 #     --query accessToken -o tsv)"
 #   curl -i -H "Authorization: Bearer $TOKEN" http://localhost:8080/secure
 #   DEBUGPY=1 python -m uvicorn app.main:app --host 127.0.0.1 --port 8080
+#   uvicorn app.main:app
+#   pip install pip-tools
+#   pip-compile requirements.in
+#   pip install -r requirements.txt
+
+
 
 import json
 import os
