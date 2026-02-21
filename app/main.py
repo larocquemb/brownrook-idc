@@ -9,11 +9,11 @@
 #   curl -i -H "Authorization: Bearer $TOKEN" http://localhost:8080/secure
 #   DEBUGPY=1 python -m uvicorn app.main:app --host 127.0.0.1 --port 8080
 #   uvicorn app.main:app
+
+#   To install dependencies 
 #   pip install pip-tools
-#   pip-compile requirements.in
-#   pip install -r requirements.txt
-
-
+#   pip-compile requirements.in or requirements-dev.in
+#   pip install -r requirements.txt or requirements-dev.txt
 
 import json
 import os
