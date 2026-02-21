@@ -16,6 +16,7 @@
 #   pip install -r requirements.txt or requirements-dev.txt
 
 import json
+import logging
 import os
 import time
 from pprint import pformat
@@ -28,7 +29,9 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 import jwt
 from jwt import PyJWKClient
 from jwt import InvalidTokenError
+import urllib.error
 
+logger = logging.getLogger("idc.auth")
 load_dotenv()
 app = FastAPI(title="BrownRook IDC", version="0.2.0")
 security = HTTPBearer()
@@ -77,24 +80,33 @@ ALLOWED_ALGS = ["RS256"]
 _jwks_cache: TTLCache = TTLCache(maxsize=2, ttl=600)
 _jwk_client = PyJWKClient(OIDC_JWKS_URL)
 
+def _unauthorized(detail: str) -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail=detail,
+        headers={"WWW-Authenticate": "Bearer"},
+    )
 
 def _verify_token(token: str) -> dict:
     if not CONFIG_OK:
         raise HTTPException(
-            status_code=500,
-            detail="OIDC not configured"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="OIDC not configured",
         )
 
+    expected_iss = (OIDC_ISSUER or "").rstrip("/")
+    expected_aud = OIDC_AUDIENCE
+
     try:
-        # Automatically fetches & selects correct key by kid
         signing_key = _jwk_client.get_signing_key_from_jwt(token)
 
         claims = jwt.decode(
             token,
             signing_key.key,
             algorithms=ALLOWED_ALGS,
-            audience=OIDC_AUDIENCE,
-            issuer=OIDC_ISSUER,
+            audience=expected_aud,
+            issuer=expected_iss,
+            leeway=60,
             options={
                 "require": ["exp", "iss", "aud"],
                 "verify_signature": True,
@@ -106,18 +118,50 @@ def _verify_token(token: str) -> dict:
 
         return claims
 
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired")
+    # ---- JWKS / network errors → 503 ----
+    except jwt.exceptions.PyJWKClientConnectionError as e:
+        logger.error("JWKS fetch failed: %s", e)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="JWKS fetch failed",
+        )
+    except urllib.error.URLError as e:
+        logger.error("JWKS network error: %s", e)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="JWKS fetch failed",
+        )
 
-    except jwt.InvalidAudienceError:
-        raise HTTPException(status_code=401, detail="Invalid audience")
+    # ---- Token validation errors → 401 ----
+    except jwt.ExpiredSignatureError:
+        logger.info("Token expired")
+        raise _unauthorized("Token expired")
 
     except jwt.InvalidIssuerError:
-        raise HTTPException(status_code=401, detail="Invalid issuer")
+        logger.info("Invalid issuer")
+        raise _unauthorized("Invalid issuer")
 
-    except InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    
+    except jwt.InvalidAudienceError:
+        logger.info("Invalid audience")
+        raise _unauthorized("Invalid audience")
+
+    except jwt.ImmatureSignatureError:
+        logger.info("Token not yet valid")
+        raise _unauthorized("Token not yet valid")
+
+    except jwt.InvalidSignatureError:
+        logger.info("Invalid signature")
+        raise _unauthorized("Invalid token signature")
+
+    except InvalidTokenError as e:
+        logger.info("Invalid token: %s", e)
+        raise _unauthorized("Invalid token")
+
+    except Exception as e:
+        # Catch absolutely everything else to prevent 500 auth leaks
+        logger.exception("Unexpected auth error")
+        raise _unauthorized("Authentication failed")
+
 @app.get("/health")
 def health():
     return {"status": "ok", "oidc_configured": CONFIG_OK}
