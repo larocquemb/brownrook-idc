@@ -202,7 +202,7 @@ def root() -> dict[str, str]:
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "oidc_configured": CONFIG_OK}
+    return {"status": "ok", "oidc_configured": CONFIG_OK, "build_demo": "v2"}
 
 @app.get("/secure")
 def secure(request: Request, credentials: HTTPAuthorizationCredentials = Depends(security)):
