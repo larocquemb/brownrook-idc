@@ -1,0 +1,45 @@
+# Git
+.git
+.gitignore
+
+# Virtual environment
+.venv
+venv
+
+# Python caches
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+
+# Build artifacts
+build
+dist
+*.egg-info
+src/*.egg-info
+src/**/*.egg-info
+
+# Tool caches
+.pytest_cache
+.mypy_cache
+.ruff_cache
+
+# Local config / secrets
+.env
+.env.*
+*.key
+*.pem
+*.pfx
+*.p12
+
+# Development files
+tests
+docs
+infra
+
+# Editor
+.vscode
+.idea
+
+# macOS
+.DS_Store

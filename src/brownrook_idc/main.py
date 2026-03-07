@@ -7,13 +7,25 @@
 #     --scope api://6d299c31-0dbe-4484-a18f-220d13558f3d/.default \
 #     --query accessToken -o tsv)"
 #   curl -i -H "Authorization: Bearer $TOKEN" http://localhost:8080/secure
-#   DEBUGPY=1 python -m uvicorn app.main:app --host 127.0.0.1 --port 8080
-#   uvicorn app.main:app
 
-#   To install dependencies 
-#   pip install pip-tools
-#   pip-compile requirements.in or requirements-dev.in
-#   pip install -r requirements.txt or requirements-dev.txt
+# Development run examples
+#
+# Run with uvicorn directly:
+#   python -m uvicorn brownrook_idc.main:app --host 127.0.0.1 --port 8080
+#
+# Run with debugger support:
+#   DEBUGPY=1 python -m uvicorn brownrook_idc.main:app --host 127.0.0.1 --port 8080
+#
+# Run using the installed CLI entrypoint:
+#   brownrook-idc
+#
+# Install project dependencies (editable install for development):
+#   python -m venv .venv
+#   source .venv/bin/activate
+#   pip install -e .
+#
+# Install development dependencies:
+#   pip install -e ".[dev]"
 
 import json
 import logging
@@ -26,6 +38,7 @@ from cachetools import TTLCache
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+import uvicorn
 import jwt
 from jwt import PyJWKClient
 from jwt import InvalidTokenError
@@ -57,16 +70,32 @@ if os.getenv("DEBUGPY") == "1":
 if os.getenv("DEBUGPY_WAIT") == "1":
     try:
         import debugpy
-        debugpy.listen(("127.0.0.1", 5678))
         debugpy.wait_for_client()
     except Exception:
         # Don't let debugger setup break app startup.
         pass
 
+def required_env(name: str) -> str:
+    value = os.getenv(name)
+    if not value:
+        raise RuntimeError(f"Missing required environment variable: {name}")
+    return value
+
+
 # ===== Config (env-driven) =====
-OIDC_ISSUER = os.getenv("OIDC_ISSUER", "").rstrip("/")
-OIDC_AUDIENCE = os.getenv("OIDC_AUDIENCE", "")
-OIDC_JWKS_URL = os.getenv("OIDC_JWKS_URL", "")
+TENANT_ID = required_env("TENANT_ID")
+
+OIDC_ISSUER = os.getenv(
+    "OIDC_ISSUER",
+    f"https://login.microsoftonline.com/{TENANT_ID}/v2.0",
+).rstrip("/")
+
+OIDC_JWKS_URL = os.getenv(
+    "OIDC_JWKS_URL",
+    f"https://login.microsoftonline.com/{TENANT_ID}/discovery/v2.0/keys",
+)
+
+OIDC_AUDIENCE = os.getenv("OIDC_AUDIENCE", required_env("CLIENT_ID"))
 OIDC_SCOPE = os.getenv("OIDC_SCOPE", "")
 
 if not (OIDC_ISSUER and OIDC_AUDIENCE and OIDC_JWKS_URL):
@@ -165,10 +194,13 @@ def _verify_token(token: str, request_id: str | None = None) -> dict:
         logger.exception("Unexpected auth error (request_id=%s)", request_id)
         raise _unauthorized("Authentication failed", request_id)
 
+@app.get("/")
+def root() -> dict[str, str]:
+    return {"message": "brownrook-idc is running"}
+
 @app.get("/health")
 def health():
     return {"status": "ok", "oidc_configured": CONFIG_OK}
-
 
 @app.get("/secure")
 def secure(request: Request, credentials: HTTPAuthorizationCredentials = Depends(security)):
@@ -214,7 +246,11 @@ def secure(request: Request, credentials: HTTPAuthorizationCredentials = Depends
         media_type="application/json",
     )
 
+def main() -> None:
+    host = os.getenv("HOST", "0.0.0.0")
+    port = int(os.getenv("PORT", "8080"))
+    uvicorn.run("brownrook_idc.main:app", host=host, port=port, log_level="info")
 
-@app.on_event("startup")
-async def startup():
-    pass
+
+if __name__ == "__main__":
+    main()
