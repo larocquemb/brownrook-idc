@@ -73,7 +73,7 @@ jobs:
       - name: Update deployment image tag
         run: |
           cd brownrook-infra
-          sed -i "s|image: ghcr.io/larocquemb/brownrook-idc:.*|image: ghcr.io/larocquemb/brownrook-idc:${GITHUB_SHA}|" \
+          sed -i "s|image: ghcr.io/larocquemb/brownrook-idc[:@].*|image: ghcr.io/larocquemb/brownrook-idc:${GITHUB_SHA}|" \
             kubernetes/platform/idc/20-deployment.yaml
 
       - name: Commit and push infra change
@@ -82,5 +82,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add kubernetes/platform/idc/20-deployment.yaml
-          git commit -m "deploy brownrook-idc ${GITHUB_SHA}" || exit 0
+          git commit -m "deploy brownrook-idc ${GITHUB_SHA} [skip ci]" || exit 0
           git push
