@@ -1,17 +1,19 @@
 # macOS
 .DS_Store
 
-# Never commit key material
+# Secrets / key material
 *.key
 *.p12
 *.pfx
 *.pem
 *.pem.key
+*.crt
 
 # Environment / secrets
 .env
 .env.*
 *.secret
+*.secret.yaml
 
 # Python bytecode / cache
 __pycache__/
@@ -19,11 +21,11 @@ __pycache__/
 *.pyo
 
 # Build artifacts
-build
-dist
-*.egg-info
-src/*.egg-info
-src/**/*.egg-info
+build/
+dist/
+*.egg-info/
+src/*.egg-info/
+src/**/*.egg-info/
 
 # Virtual environments
 .venv/
