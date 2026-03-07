@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: brownrook-idc-config
+  namespace: brownrook-idc
+data:
+  HOST: "0.0.0.0"
+  PORT: "8080"
+  OIDC_ISSUER: "https://login.microsoftonline.com/8b07f4bd-41e4-4106-8d49-00c5d79d35a2/v2.0"
+  OIDC_JWKS_URL: "https://login.microsoftonline.com/8b07f4bd-41e4-4106-8d49-00c5d79d35a2/discovery/v2.0/keys"

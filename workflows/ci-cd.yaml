@@ -1,0 +1,75 @@
+name: CI/CD
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+env:
+  IMAGE_NAME: ghcr.io/larocquemb/brownrook-idc
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run tests
+        run: make test
+
+  build-and-push:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/larocquemb/brownrook-idc:latest
+            ghcr.io/larocquemb/brownrook-idc:${{ github.sha }}
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to k3s over SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.K3S_HOST }}
+          username: ${{ secrets.K3S_USER }}
+          key: ${{ secrets.K3S_SSH_KEY }}
+          script: |
+            kubectl -n brownrook-idc set image deployment/brownrook-idc \
+              brownrook-idc=ghcr.io/larocquemb/brownrook-idc:${{ github.sha }}
+            kubectl -n brownrook-idc rollout status deployment/brownrook-idc
