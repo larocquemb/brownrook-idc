@@ -46,7 +46,7 @@ jobs:
         with:
           registry: ghcr.io
           username: larocquemb
-          password: ${{ secrets.CR_PAT}}
+          password: ${{ secrets.CR_PAT }}
 
       - name: Build and push image
         uses: docker/build-push-action@v6
@@ -57,19 +57,4 @@ jobs:
             ghcr.io/larocquemb/brownrook-idc:latest
             ghcr.io/larocquemb/brownrook-idc:${{ github.sha }}
 
-  deploy:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: build-and-push
-    runs-on: ubuntu-latest
 
-    steps:
-      - name: Deploy to k3s over SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.K3S_HOST }}
-          username: ${{ secrets.K3S_USER }}
-          key: ${{ secrets.K3S_SSH_KEY }}
-          script: |
-            kubectl -n brownrook-idc set image deployment/brownrook-idc \
-              brownrook-idc=ghcr.io/larocquemb/brownrook-idc:${{ github.sha }}
-            kubectl -n brownrook-idc rollout status deployment/brownrook-idc
