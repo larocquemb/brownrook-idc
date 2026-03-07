@@ -12,6 +12,8 @@
 #
 # Run with uvicorn directly:
 #   python -m uvicorn brownrook_idc.main:app --host 127.0.0.1 --port 8080
+#   uvicorn brownrook_idc.main:app --host 127.0.0.1 --port 8080
+#   uvicorn brownrook_idc.main:app --reload --host 127.0.0.1 --port 8080
 #
 # Run with debugger support:
 #   DEBUGPY=1 python -m uvicorn brownrook_idc.main:app --host 127.0.0.1 --port 8080
