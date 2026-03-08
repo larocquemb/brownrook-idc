@@ -2,43 +2,61 @@ from pathlib import Path
 import os
 import re
 
-p = Path("brownrook-infra/kubernetes/platform/idc/20-deployment.yaml")
-text = p.read_text()
+infra_file = Path("brownrook-infra/kubernetes/platform/idc/20-deployment.yaml")
+
+text = infra_file.read_text()
 
 version = Path("VERSION").read_text().strip()
 git_commit = os.environ["GITHUB_SHA"]
 build_number = os.environ["GITHUB_RUN_NUMBER"]
+
 image_ref = f"ghcr.io/larocquemb/brownrook-idc:{git_commit}"
 
-text = re.sub(
-    r'image:\s*ghcr\.io/larocquemb/brownrook-idc[:@][^\s"]+',
-    f'image: {image_ref}',
+def replace(pattern, replacement, text):
+    new_text, count = re.subn(pattern, replacement, text, flags=re.MULTILINE)
+    if count == 0:
+        raise RuntimeError(f"Pattern not found: {pattern}")
+    return new_text
+
+# update container image
+text = replace(
+    r'(image:\s*)ghcr\.io/larocquemb/brownrook-idc[:@][^\s"]+',
+    rf'\1{image_ref}',
     text,
 )
 
-text = re.sub(
-    r'(- name: APP_VERSION\s+value:\s+)".*"',
+# update APP_VERSION
+text = replace(
+    r'(- name:\s*APP_VERSION\s*\n\s*value:\s*)(.*)',
     rf'\1"{version}"',
     text,
 )
 
-text = re.sub(
-    r'(- name: GIT_COMMIT\s+value:\s+)".*"',
+# update GIT_COMMIT
+text = replace(
+    r'(- name:\s*GIT_COMMIT\s*\n\s*value:\s*)(.*)',
     rf'\1"{git_commit}"',
     text,
 )
 
-text = re.sub(
-    r'(- name: BUILD_NUMBER\s+value:\s+)".*"',
+# update BUILD_NUMBER
+text = replace(
+    r'(- name:\s*BUILD_NUMBER\s*\n\s*value:\s*)(.*)',
     rf'\1"{build_number}"',
     text,
 )
 
-text = re.sub(
-    r'(- name: IMAGE_REF\s+value:\s+)".*"',
+# update IMAGE_REF
+text = replace(
+    r'(- name:\s*IMAGE_REF\s*\n\s*value:\s*)(.*)',
     rf'\1"{image_ref}"',
     text,
 )
 
-p.write_text(text)
-print(f"Updated image={image_ref}, version={version}, build={build_number}")
+infra_file.write_text(text)
+
+print("Updated deployment metadata:")
+print(f"  APP_VERSION = {version}")
+print(f"  GIT_COMMIT  = {git_commit}")
+print(f"  BUILD_NUMBER = {build_number}")
+print(f"  IMAGE_REF   = {image_ref}")

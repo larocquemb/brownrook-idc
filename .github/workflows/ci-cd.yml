@@ -65,6 +65,7 @@ jobs:
             org.opencontainers.image.source=https://github.com/larocquemb/brownrook-idc
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.version=${{ steps.version.outputs.VERSION }}
+
   update-infra:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: build-and-push
