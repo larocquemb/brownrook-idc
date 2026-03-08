@@ -56,7 +56,10 @@ jobs:
           tags: |
             ghcr.io/larocquemb/brownrook-idc:latest
             ghcr.io/larocquemb/brownrook-idc:${{ github.sha }}
-
+          labels: |
+            org.opencontainers.image.source=https://github.com/larocquemb/brownrook-idc
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ github.sha }}
   update-infra:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: build-and-push
