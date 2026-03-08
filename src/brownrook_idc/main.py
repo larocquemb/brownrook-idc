@@ -86,7 +86,8 @@ def required_env(name: str) -> str:
 
 # ===== Config (env-driven) =====
 TENANT_ID = required_env("TENANT_ID")
-
+IMAGE_REF = os.getenv("IMAGE_REF", "unknown")
+VERSION = IMAGE_REF.split(":")[-1]
 OIDC_ISSUER = os.getenv(
     "OIDC_ISSUER",
     f"https://login.microsoftonline.com/{TENANT_ID}/v2.0",
@@ -202,7 +203,12 @@ def root() -> dict[str, str]:
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "oidc_configured": CONFIG_OK, "build_demo": "v2"}
+    return {
+        "status": "ok",
+        "oidc_configured": CONFIG_OK,
+        "version": VERSION,
+        "image": IMAGE_REF,
+    }
 
 @app.get("/secure")
 def secure(request: Request, credentials: HTTPAuthorizationCredentials = Depends(security)):
