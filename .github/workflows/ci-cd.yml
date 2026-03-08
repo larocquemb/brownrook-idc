@@ -41,6 +41,10 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v4
 
+      - name: Read VERSION
+        id: version
+        run: echo "VERSION=$(cat VERSION)" >> "$GITHUB_OUTPUT"
+
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
@@ -56,16 +60,20 @@ jobs:
           tags: |
             ghcr.io/larocquemb/brownrook-idc:latest
             ghcr.io/larocquemb/brownrook-idc:${{ github.sha }}
+            ghcr.io/larocquemb/brownrook-idc:${{ steps.version.outputs.VERSION }}
           labels: |
             org.opencontainers.image.source=https://github.com/larocquemb/brownrook-idc
             org.opencontainers.image.revision=${{ github.sha }}
-            org.opencontainers.image.version=${{ github.sha }}
+            org.opencontainers.image.version=${{ steps.version.outputs.VERSION }}
   update-infra:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: build-and-push
     runs-on: ubuntu-latest
 
     steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
       - name: Check out infra repo
         uses: actions/checkout@v4
         with:
@@ -73,11 +81,8 @@ jobs:
           token: ${{ secrets.INFRA_REPO_PAT }}
           path: brownrook-infra
 
-      - name: Update deployment image tag
-        run: |
-          cd brownrook-infra
-          sed -i "s|image: ghcr.io/larocquemb/brownrook-idc[:@].*|image: ghcr.io/larocquemb/brownrook-idc:${GITHUB_SHA}|" \
-            kubernetes/platform/idc/20-deployment.yaml
+      - name: Update deployment metadata
+        run: python scripts/update_infra_metadata.py
 
       - name: Commit and push infra change
         run: |

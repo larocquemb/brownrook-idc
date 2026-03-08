@@ -85,19 +85,21 @@ def required_env(name: str) -> str:
 
 
 # ===== Config (env-driven) =====
+APP_VERSION = os.getenv("APP_VERSION", "unknown")
+GIT_COMMIT = os.getenv("GIT_COMMIT", "unknown")
+BUILD_NUMBER = os.getenv("BUILD_NUMBER", "unknown")
+IMAGE_REF = os.getenv("IMAGE_REF", "unknown")
+POD_NAME = os.getenv("HOSTNAME", "unknown")
+
 TENANT_ID = required_env("TENANT_ID")
-IMAGE_REF = "v8"
-VERSION = IMAGE_REF.split(":")[-1]
 OIDC_ISSUER = os.getenv(
     "OIDC_ISSUER",
     f"https://login.microsoftonline.com/{TENANT_ID}/v2.0",
 ).rstrip("/")
-
 OIDC_JWKS_URL = os.getenv(
     "OIDC_JWKS_URL",
     f"https://login.microsoftonline.com/{TENANT_ID}/discovery/v2.0/keys",
 )
-
 OIDC_AUDIENCE = os.getenv("OIDC_AUDIENCE", required_env("CLIENT_ID"))
 OIDC_SCOPE = os.getenv("OIDC_SCOPE", "")
 
@@ -206,8 +208,11 @@ def health():
     return {
         "status": "ok",
         "oidc_configured": CONFIG_OK,
-        "version": VERSION,
+        "version": APP_VERSION,
+        "commit": GIT_COMMIT,
+        "build": BUILD_NUMBER,
         "image": IMAGE_REF,
+        "pod": POD_NAME,
     }
 
 @app.get("/secure")
