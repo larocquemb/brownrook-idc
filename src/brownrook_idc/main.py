@@ -61,6 +61,11 @@ GIT_COMMIT = os.getenv("GIT_COMMIT", "unknown")
 BUILD_NUMBER = os.getenv("BUILD_NUMBER", "unknown")
 IMAGE_REF = os.getenv("IMAGE_REF", "unknown")
 POD_NAME = os.getenv("HOSTNAME", "unknown")
+DEPLOYMENT_PROFILE = os.getenv("DEPLOYMENT_PROFILE", "unknown")
+CLUSTER_NAME = os.getenv("CLUSTER_NAME", "unknown")
+KUBERNETES_VERSION = os.getenv("KUBERNETES_VERSION", "unknown")
+NODE_NAME = os.getenv("NODE_NAME", "unknown")
+NODE_OS = os.getenv("NODE_OS", "unknown")
 
 TENANT_ID = required_env("TENANT_ID")
 OIDC_ISSUER = os.getenv(
@@ -211,15 +216,46 @@ def root() -> dict[str, str]:
 @app.get("/health")
 def health():
     return {
-        "time": datetime.now(timezone.utc).isoformat(),
         "status": "ok",
         "oidc_configured": CONFIG_OK,
+    }
+
+@app.get("/info")
+def info():
+    return {
+        "time": datetime.now(timezone.utc).isoformat(),
         "version": APP_VERSION,
         "commit": GIT_COMMIT,
         "build": BUILD_NUMBER,
         "image": IMAGE_REF,
+        "deployment_profile": DEPLOYMENT_PROFILE,
+        "cluster": CLUSTER_NAME,
+        "kubernetes_version": KUBERNETES_VERSION,
+        "pod": POD_NAME
+    }
+
+@app.get("/version")
+def version():
+    return {
+        "version": APP_VERSION,
+        "commit": GIT_COMMIT,
+        "build": BUILD_NUMBER,
+        "image": IMAGE_REF,
+    }
+@app.get("/info")
+
+def info():
+    return {
+        "version": APP_VERSION,
+        "commit": GIT_COMMIT,
+        "build": BUILD_NUMBER,
+        "image": IMAGE_REF,
+        "deployment_profile": DEPLOYMENT_PROFILE,
+        "cluster": CLUSTER_NAME,
+        "kubernetes_version": KUBERNETES_VERSION,
         "pod": POD_NAME,
     }
+
 
 @app.get("/secure")
 def secure(request: Request, credentials: HTTPAuthorizationCredentials = Depends(security)):
