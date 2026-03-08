@@ -86,7 +86,7 @@ def required_env(name: str) -> str:
 
 # ===== Config (env-driven) =====
 TENANT_ID = required_env("TENANT_ID")
-IMAGE_REF = "v3"
+IMAGE_REF = "v4"
 VERSION = IMAGE_REF.split(":")[-1]
 OIDC_ISSUER = os.getenv(
     "OIDC_ISSUER",
