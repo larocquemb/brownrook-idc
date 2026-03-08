@@ -36,6 +36,7 @@ import time
 from pprint import pformat
 from typing import Any, Dict
 import requests
+from datetime import timezone, datetime
 from cachetools import TTLCache
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Request, Response, status
@@ -210,6 +211,7 @@ def root() -> dict[str, str]:
 @app.get("/health")
 def health():
     return {
+        "time": datetime.now(timezone.utc).isoformat(),
         "status": "ok",
         "oidc_configured": CONFIG_OK,
         "version": APP_VERSION,
