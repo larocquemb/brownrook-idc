@@ -46,9 +46,34 @@ from jwt import PyJWKClient
 from jwt import InvalidTokenError
 import urllib.error
 
+def required_env(name: str) -> str:
+    value = os.getenv(name)
+    if not value:
+        raise RuntimeError(f"Missing required environment variable: {name}")
+    return value
+
+# ===== Config (env-driven) =====
 logger = logging.getLogger("idc.auth")
 load_dotenv()
-app = FastAPI(title="BrownRook IDC", version="0.2.0")
+APP_VERSION = os.getenv("APP_VERSION", "unknown")
+GIT_COMMIT = os.getenv("GIT_COMMIT", "unknown")
+BUILD_NUMBER = os.getenv("BUILD_NUMBER", "unknown")
+IMAGE_REF = os.getenv("IMAGE_REF", "unknown")
+POD_NAME = os.getenv("HOSTNAME", "unknown")
+
+TENANT_ID = required_env("TENANT_ID")
+OIDC_ISSUER = os.getenv(
+    "OIDC_ISSUER",
+    f"https://login.microsoftonline.com/{TENANT_ID}/v2.0",
+).rstrip("/")
+OIDC_JWKS_URL = os.getenv(
+    "OIDC_JWKS_URL",
+    f"https://login.microsoftonline.com/{TENANT_ID}/discovery/v2.0/keys",
+)
+OIDC_AUDIENCE = os.getenv("OIDC_AUDIENCE", required_env("CLIENT_ID"))
+OIDC_SCOPE = os.getenv("OIDC_SCOPE", "")
+
+app = FastAPI(title="BrownRook IDC", version=APP_VERSION)
 security = HTTPBearer()
 
 # Optional debugpy logging for the debuggee process.
@@ -77,31 +102,10 @@ if os.getenv("DEBUGPY_WAIT") == "1":
         # Don't let debugger setup break app startup.
         pass
 
-def required_env(name: str) -> str:
-    value = os.getenv(name)
-    if not value:
-        raise RuntimeError(f"Missing required environment variable: {name}")
-    return value
 
 
-# ===== Config (env-driven) =====
-APP_VERSION = os.getenv("APP_VERSION", "unknown")
-GIT_COMMIT = os.getenv("GIT_COMMIT", "unknown")
-BUILD_NUMBER = os.getenv("BUILD_NUMBER", "unknown")
-IMAGE_REF = os.getenv("IMAGE_REF", "unknown")
-POD_NAME = os.getenv("HOSTNAME", "unknown")
 
-TENANT_ID = required_env("TENANT_ID")
-OIDC_ISSUER = os.getenv(
-    "OIDC_ISSUER",
-    f"https://login.microsoftonline.com/{TENANT_ID}/v2.0",
-).rstrip("/")
-OIDC_JWKS_URL = os.getenv(
-    "OIDC_JWKS_URL",
-    f"https://login.microsoftonline.com/{TENANT_ID}/discovery/v2.0/keys",
-)
-OIDC_AUDIENCE = os.getenv("OIDC_AUDIENCE", required_env("CLIENT_ID"))
-OIDC_SCOPE = os.getenv("OIDC_SCOPE", "")
+
 
 if not (OIDC_ISSUER and OIDC_AUDIENCE and OIDC_JWKS_URL):
     # Don't crash import-time; fail securely on /secure with clear message.
