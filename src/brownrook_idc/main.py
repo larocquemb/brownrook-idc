@@ -66,7 +66,7 @@ CLUSTER_NAME = os.getenv("CLUSTER_NAME", "unknown")
 KUBERNETES_VERSION = os.getenv("KUBERNETES_VERSION", "unknown")
 NODE_NAME = os.getenv("NODE_NAME", "unknown")
 NODE_OS = os.getenv("NODE_OS", "unknown")
-
+INFRA_COMMIT = os.getenv("INFRA_COMMIT", "unknown")
 TENANT_ID = required_env("TENANT_ID")
 OIDC_ISSUER = os.getenv(
     "OIDC_ISSUER",
@@ -247,7 +247,7 @@ def version():
 def info():
     return {
         "version": APP_VERSION,
-        "commit": GIT_COMMIT,
+        "infra_commit": INFRA_COMMIT,
         "build": BUILD_NUMBER,
         "image": IMAGE_REF,
         "deployment_profile": DEPLOYMENT_PROFILE,

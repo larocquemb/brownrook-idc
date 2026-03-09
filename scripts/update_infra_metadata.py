@@ -1,11 +1,14 @@
 from pathlib import Path
 import os
 import re
+import subprocess
 
 infra_file = Path("brownrook-infra/kubernetes/platform/idc/20-deployment.yaml")
-
 text = infra_file.read_text()
-
+infra_commit = subprocess.check_output(
+    ["git", "-C", "brownrook-infra", "rev-parse", "HEAD"],
+    text=True
+).strip()
 version = Path("VERSION").read_text().strip()
 git_commit = os.environ["GITHUB_SHA"]
 build_number = os.environ["GITHUB_RUN_NUMBER"]
