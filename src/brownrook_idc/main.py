@@ -213,7 +213,7 @@ def health():
         "oidc_configured": CONFIG_OK,
     }
 
-@app.get("/info")
+x@app.get("/info")
 def info():
     return {
         "time": datetime.now(timezone.utc).isoformat(),
@@ -224,8 +224,10 @@ def info():
         "deployment_profile": DEPLOYMENT_PROFILE,
         "cluster": CLUSTER_NAME,
         "kubernetes_version": KUBERNETES_VERSION,
-        "pod": POD_NAME
+        "node": NODE_NAME,
+        "pod": POD_NAME,
     }
+
 
 @app.get("/version")
 def version():
@@ -234,21 +236,6 @@ def version():
         "commit": GIT_COMMIT,
         "build": BUILD_NUMBER,
         "image": IMAGE_REF,
-    }
-@app.get("/info")
-
-@app.get("/info")
-def info():
-    return {
-        "time": datetime.now(timezone.utc).isoformat(),
-        "version": APP_VERSION,
-        "commit": GIT_COMMIT,
-        "build": BUILD_NUMBER,
-        "image": IMAGE_REF,
-        "deployment_profile": DEPLOYMENT_PROFILE,
-        "cluster": CLUSTER_NAME,
-        "kubernetes_version": KUBERNETES_VERSION,
-        "pod": POD_NAME,
     }
 
 @app.get("/secure")
