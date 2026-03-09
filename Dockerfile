@@ -8,8 +8,8 @@ WORKDIR /build
 COPY pyproject.toml README.md /build/
 COPY src /build/src
 
-RUN pip install --no-cache-dir --upgrade pip build && \
-    python -m build --wheel
+RUN python -m pip install --no-cache-dir --upgrade pip build
+RUN python -m build --wheel
 
 FROM registry.access.redhat.com/ubi10/python-312-minimal:10.1
 
@@ -22,9 +22,9 @@ WORKDIR /app
 
 COPY --from=builder /build/dist/*.whl /app/
 
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir /app/*.whl && \
-    rm -f /app/*.whl
+RUN python -m pip install --no-cache-dir /app/*.whl && rm -f /app/*.whl
+
+USER 1001
 
 EXPOSE 8080
 
