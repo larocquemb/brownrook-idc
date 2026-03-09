@@ -213,7 +213,7 @@ def health():
         "oidc_configured": CONFIG_OK,
     }
 
-x@app.get("/info")
+@app.get("/info")
 def info():
     return {
         "time": datetime.now(timezone.utc).isoformat(),
