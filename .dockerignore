@@ -37,6 +37,8 @@ src/**/*.egg-info
 tests
 docs
 infra
+dist
+build
 
 # Editor
 .vscode
