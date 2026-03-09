@@ -244,9 +244,12 @@ def version():
     }
 @app.get("/info")
 
+@app.get("/info")
 def info():
     return {
+        "time": datetime.now(timezone.utc).isoformat(),
         "version": APP_VERSION,
+        "commit": GIT_COMMIT,
         "infra_commit": INFRA_COMMIT,
         "build": BUILD_NUMBER,
         "image": IMAGE_REF,
@@ -255,7 +258,6 @@ def info():
         "kubernetes_version": KUBERNETES_VERSION,
         "pod": POD_NAME,
     }
-
 
 @app.get("/secure")
 def secure(request: Request, credentials: HTTPAuthorizationCredentials = Depends(security)):
