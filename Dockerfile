@@ -5,9 +5,10 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /build
 
-COPY pyproject.toml README.md /build/
+COPY pyproject.toml README.md VERSION /build/
 COPY src /build/src
 
+RUN pwd && ls -la && find . -maxdepth 3 -type f | sort
 RUN python -m pip install --no-cache-dir --upgrade pip build
 RUN python -m build --wheel
 
