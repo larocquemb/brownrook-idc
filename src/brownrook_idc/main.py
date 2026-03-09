@@ -66,7 +66,6 @@ CLUSTER_NAME = os.getenv("CLUSTER_NAME", "unknown")
 KUBERNETES_VERSION = os.getenv("KUBERNETES_VERSION", "unknown")
 NODE_NAME = os.getenv("NODE_NAME", "unknown")
 NODE_OS = os.getenv("NODE_OS", "unknown")
-INFRA_COMMIT = os.getenv("INFRA_COMMIT", "unknown")
 TENANT_ID = required_env("TENANT_ID")
 OIDC_ISSUER = os.getenv(
     "OIDC_ISSUER",
@@ -107,12 +106,6 @@ if os.getenv("DEBUGPY_WAIT") == "1":
     except Exception:
         # Don't let debugger setup break app startup.
         pass
-
-
-
-
-
-
 if not (OIDC_ISSUER and OIDC_AUDIENCE and OIDC_JWKS_URL):
     # Don't crash import-time; fail securely on /secure with clear message.
     CONFIG_OK = False
@@ -250,7 +243,6 @@ def info():
         "time": datetime.now(timezone.utc).isoformat(),
         "version": APP_VERSION,
         "commit": GIT_COMMIT,
-        "infra_commit": INFRA_COMMIT,
         "build": BUILD_NUMBER,
         "image": IMAGE_REF,
         "deployment_profile": DEPLOYMENT_PROFILE,
