@@ -46,19 +46,22 @@ text = replace(
     text,
 )
 
-# optional cleanup if old fields still exist
-text = re.sub(
-    r'^\s*- name:\s*INFRA_COMMIT\s*\n\s*value:\s*.*\n',
-    '',
+text = replace(
+    r'(^\s*brownrook\.com/app-version:\s*)(.*)',
+    rf'\1"{version}"',
     text,
-    flags=re.MULTILINE,
 )
 
-text = re.sub(
-    r'^\s*- name:\s*IMAGE_COMMIT\s*\n\s*value:\s*.*\n',
-    '',
+text = replace(
+    r'(^\s*brownrook\.com/git-commit:\s*)(.*)',
+    rf'\1"{git_commit}"',
     text,
-    flags=re.MULTILINE,
+)
+
+text = replace(
+    r'(^\s*brownrook\.com/build-number:\s*)(.*)',
+    rf'\1"{build_number}"',
+    text,
 )
 
 infra_file.write_text(text)
