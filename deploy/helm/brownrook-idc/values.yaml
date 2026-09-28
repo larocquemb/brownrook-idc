@@ -117,8 +117,11 @@ networkPolicy:
 topologySpread:
   enabled: true
   maxSkew: 1
+  minDomains: 2
   topologyKey: kubernetes.io/hostname
-  whenUnsatisfiable: ScheduleAnyway
+  whenUnsatisfiable: DoNotSchedule
+  matchLabelKeys:
+    - pod-template-hash
 
 nodeSelector: {}
 tolerations: []

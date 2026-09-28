@@ -9,7 +9,7 @@ differences required by each target.
 | Target | Values file | Important mapping |
 | --- | --- | --- |
 | Portable baseline | `values.yaml` | Secure workload defaults with no ingress |
-| Brown Rook K3s | `values-k3s.yaml` | Traefik ingress class and host-level spreading |
+| Brown Rook K3s | `values-k3s.yaml` | Traefik ingress class and enforced host-level spreading across at least two nodes |
 | Amazon EKS DR | `values-eks.yaml` | Internal ALB ingress class and zone spreading |
 
 Ingress is disabled in both platform profiles. Enabling it is an operator
