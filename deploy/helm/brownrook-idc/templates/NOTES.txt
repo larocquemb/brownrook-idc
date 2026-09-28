@@ -1,0 +1,6 @@
+BrownRook IDC has been rendered for the {{ .Values.deployment.profile }} profile.
+
+Before installing, create the OIDC secret named {{ .Values.oidc.existingSecret }}
+with keys {{ .Values.oidc.tenantIdKey }} and {{ .Values.oidc.clientIdKey }}.
+
+The chart does not create credentials or store secret values in Helm state.

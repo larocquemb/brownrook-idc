@@ -1,0 +1,7 @@
+apiVersion: v2
+name: brownrook-idc
+description: Portable Kubernetes deployment for the BrownRook identity and control plane
+type: application
+version: 0.1.0
+appVersion: "0.1.18"
+kubeVersion: ">=1.29.0-0"

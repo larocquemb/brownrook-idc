@@ -1,0 +1,18 @@
+deployment:
+  profile: eks-dr
+  clusterName: brownrook-eks-dr
+
+ingress:
+  enabled: false
+  className: alb
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internal
+    alb.ingress.kubernetes.io/target-type: ip
+
+topologySpread:
+  topologyKey: topology.kubernetes.io/zone
+
+# Set this to the EKS VPC CIDR before enabling an ALB ingress. Keeping the
+# default empty prevents an accidentally broad workload NetworkPolicy rule.
+networkPolicy:
+  allowedIngressCidrs: []

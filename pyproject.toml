@@ -25,6 +25,7 @@ dev = [
   "ruff>=0.6,<1.0",
   "black>=24,<25",
   "mypy>=1.11,<2.0",
+  "PyYAML>=6,<7",
 ]
 
 [project.scripts]
