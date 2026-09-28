@@ -126,8 +126,11 @@ spec:
       {{- if .Values.topologySpread.enabled }}
       topologySpreadConstraints:
         - maxSkew: {{ .Values.topologySpread.maxSkew }}
+          minDomains: {{ .Values.topologySpread.minDomains }}
           topologyKey: {{ .Values.topologySpread.topologyKey }}
           whenUnsatisfiable: {{ .Values.topologySpread.whenUnsatisfiable }}
+          matchLabelKeys:
+            {{- toYaml .Values.topologySpread.matchLabelKeys | nindent 12 }}
           labelSelector:
             matchLabels:
               {{- include "brownrook-idc.selectorLabels" . | nindent 14 }}

@@ -79,6 +79,15 @@ def main() -> None:
     require(
         constraints and constraints[0].get("topologyKey") == expected_topology, "wrong topology key"
     )
+    require(
+        constraints[0].get("whenUnsatisfiable") == "DoNotSchedule",
+        "topology spreading is not enforced",
+    )
+    require(constraints[0].get("minDomains") == 2, "topology spreading requires two domains")
+    require(
+        "pod-template-hash" in constraints[0].get("matchLabelKeys", []),
+        "topology spreading does not distinguish rollout revisions",
+    )
 
     find_resource(resources, "Service")
     find_resource(resources, "ServiceAccount")
