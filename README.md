@@ -13,6 +13,20 @@ It provides:
 
 This repository contains the Phase 1 implementation.
 
+## Kubernetes portability
+
+The application includes one provider-neutral Helm chart with explicit K3s
+and Amazon EKS profiles. See [docs/KUBERNETES.md](docs/KUBERNETES.md) for the
+secret contract, validation commands, deployment examples, and rollback rules.
+
+```bash
+make validate
+make smoke-kind
+```
+
+The Kind smoke test is isolated and disposable. Deployment to the live K3s
+cluster or AWS is intentionally not part of the local validation path.
+
 ---
 
 ## Architecture (Phase 1)

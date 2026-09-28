@@ -1,0 +1,15 @@
+deployment:
+  profile: k3s
+  clusterName: brownrook-k3s
+
+ingress:
+  enabled: false
+  className: traefik
+
+topologySpread:
+  topologyKey: kubernetes.io/hostname
+
+networkPolicy:
+  ingressNamespaceSelector:
+    matchLabels:
+      kubernetes.io/metadata.name: kube-system

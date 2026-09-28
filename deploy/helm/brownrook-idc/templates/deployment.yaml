@@ -1,0 +1,149 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "brownrook-idc.fullname" . }}
+  labels:
+    {{- include "brownrook-idc.labels" . | nindent 4 }}
+  annotations:
+    brownrook.com/app-version: {{ .Chart.AppVersion | quote }}
+    brownrook.com/git-commit: {{ .Values.build.gitCommit | quote }}
+    brownrook.com/build-number: {{ .Values.build.buildNumber | quote }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  revisionHistoryLimit: {{ .Values.deployment.revisionHistoryLimit }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      {{- include "brownrook-idc.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/deployment-config: {{ toJson (dict "deployment" .Values.deployment "oidc" .Values.oidc "build" .Values.build) | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "brownrook-idc.selectorLabels" . | nindent 8 }}
+        brownrook.com/deployment-profile: {{ .Values.deployment.profile | quote }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "brownrook-idc.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
+      terminationGracePeriodSeconds: {{ .Values.deployment.terminationGracePeriodSeconds }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: idc
+          image: {{ include "brownrook-idc.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: TENANT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "oidc.existingSecret is required" .Values.oidc.existingSecret }}
+                  key: {{ required "oidc.tenantIdKey is required" .Values.oidc.tenantIdKey }}
+            - name: CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "oidc.existingSecret is required" .Values.oidc.existingSecret }}
+                  key: {{ required "oidc.clientIdKey is required" .Values.oidc.clientIdKey }}
+            - name: APP_VERSION
+              value: {{ .Chart.AppVersion | quote }}
+            - name: GIT_COMMIT
+              value: {{ .Values.build.gitCommit | quote }}
+            - name: BUILD_NUMBER
+              value: {{ .Values.build.buildNumber | quote }}
+            - name: IMAGE_REF
+              value: {{ include "brownrook-idc.image" . | quote }}
+            - name: DEPLOYMENT_PROFILE
+              value: {{ .Values.deployment.profile | quote }}
+            - name: CLUSTER_NAME
+              value: {{ .Values.deployment.clusterName | quote }}
+            - name: KUBERNETES_VERSION
+              value: {{ .Values.deployment.kubernetesVersion | quote }}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            {{- with .Values.oidc.issuer }}
+            - name: OIDC_ISSUER
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.oidc.jwksUrl }}
+            - name: OIDC_JWKS_URL
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.oidc.audience }}
+            - name: OIDC_AUDIENCE
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.oidc.scope }}
+            - name: OIDC_SCOPE
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            {{- toYaml .Values.probes.startup | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            {{- toYaml .Values.probes.readiness | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            {{- toYaml .Values.probes.liveness | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- if .Values.topologySpread.enabled }}
+      topologySpreadConstraints:
+        - maxSkew: {{ .Values.topologySpread.maxSkew }}
+          topologyKey: {{ .Values.topologySpread.topologyKey }}
+          whenUnsatisfiable: {{ .Values.topologySpread.whenUnsatisfiable }}
+          labelSelector:
+            matchLabels:
+              {{- include "brownrook-idc.selectorLabels" . | nindent 14 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.priorityClassName }}
+      priorityClassName: {{ . | quote }}
+      {{- end }}
